@@ -2,7 +2,6 @@
   import { db, user } from "$lib/firebase";
   import type { UserData } from "$lib/types";
   import { doc, getDoc } from "firebase/firestore";
-  import { onMount } from "svelte";
 
   let userData;
 
