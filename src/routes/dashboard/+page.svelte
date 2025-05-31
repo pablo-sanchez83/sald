@@ -4,7 +4,8 @@
   import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
   import Chart from "$lib/dashboardComponents/Chart.svelte";
   import TransactionTable from "$lib/dashboardComponents/TransactionTable.svelte";
-    import NewTransactionForm from "$lib/dashboardComponents/NewTransactionForm.svelte";
+  import NewTransactionForm from "$lib/dashboardComponents/NewTransactionForm.svelte";
+  import { TrendingDown, TrendingUp, Wallet } from "lucide-svelte";
 
   let userData: UserData | null;
   let formattedTransactions: FormattedTransaction[] = [];
@@ -50,16 +51,31 @@
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
+        // Filtrar ingresos y gastos del mes actual
+        const currentMonthIncomes = userData.transactions.filter(
+          (tx) =>
+            tx.type === "income" &&
+            tx.date.toDate().getMonth() === currentMonth &&
+            tx.date.toDate().getFullYear() === currentYear,
+        );
         const currentMonthExpenses = userData.transactions.filter(
           (tx) =>
             tx.type === "expense" &&
             tx.date.toDate().getMonth() === currentMonth &&
-            tx.date.toDate().getFullYear() === currentYear
+            tx.date.toDate().getFullYear() === currentYear,
         );
 
-        diferencia =
-          userData.salary -
-          currentMonthExpenses.reduce((acc, tx) => acc + tx.amount, 0);
+        // Calcular diferencia: salario + ingresos - gastos
+        const totalIncomes = currentMonthIncomes.reduce(
+          (acc, tx) => acc + tx.amount,
+          0,
+        );
+        const totalExpenses = currentMonthExpenses.reduce(
+          (acc, tx) => acc + tx.amount,
+          0,
+        );
+
+        diferencia = userData.salary + totalIncomes - totalExpenses;
       } else {
         userData = null;
       }
@@ -119,15 +135,9 @@
             ${userData.salary.toLocaleString()}
           </p>
         </div>
-        <svg
+        <Wallet
           class="w-10 h-10 sm:w-12 sm:h-12 text-green-200 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          ><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"
-          ></circle></svg
-        >
+        />
       </div>
 
       <!-- Diferencia mensual -->
@@ -146,15 +156,15 @@
             {diferencia >= 0 ? "+" : ""}{diferencia.toLocaleString()}
           </p>
         </div>
-        <svg
-          class="w-10 h-10 sm:w-12 sm:h-12 text-blue-200 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          ><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"
-          ></circle></svg
-        >
+        {#if diferencia >= 0}
+          <TrendingUp
+            class="w-10 h-10 sm:w-12 sm:h-12 text-blue-200 flex-shrink-0"
+          />
+        {:else}
+          <TrendingDown
+            class="w-10 h-10 sm:w-12 sm:h-12 text-red-200 flex-shrink-0"
+          />
+        {/if}
       </div>
       <!-- Botón para agregar transacción -->
       <button
