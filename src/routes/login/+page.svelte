@@ -13,11 +13,12 @@
         password: "",
     };
 
+    let errorMessage: string = "";
+
     async function signInWithGoogle() {
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
-            // The signed-in user info.
             if (result.user) {
                 const user = result.user;
                 await getDoc(doc(db, "users", user.uid));
@@ -28,10 +29,10 @@
                 await getDoc(doc(db, "users", user.uid));
                 goto("/dashboard");
             }
-            
             console.log("User signed in:", user);
         } catch (error) {
             console.error("Error signing in with Google:", error);
+            errorMessage = "Error al iniciar sesión con Google.";
         }
     }
 
@@ -43,10 +44,18 @@
             goto("/dashboard");
         } catch(error) {
             console.error("Error signing up:", error);
-            // ..
+            errorMessage = "Email o contraseña incorrectos.";
         }
     }
 </script>
+
+{#if errorMessage}
+<div class="toast toast-end">
+  <div class="alert alert-error">
+    <span>{errorMessage}</span>
+  </div>
+</div>
+{/if}
 {#if $user}
     <div class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md text-center">
