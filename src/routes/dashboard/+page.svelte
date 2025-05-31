@@ -146,15 +146,11 @@
           <h2 class="text-base sm:text-lg font-semibold truncate">
             Salario mensual
           </h2>
-          <p
-            class="text-2xl sm:text-3xl font-bold mt-2 truncate"
-          >
+          <p class="text-2xl sm:text-3xl font-bold mt-2 truncate">
             ${userData.salary.toLocaleString()}
           </p>
         </div>
-        <Wallet
-          class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
-        />
+        <Wallet class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
       </div>
 
       <!-- Diferencia mensual -->
@@ -174,13 +170,9 @@
           </p>
         </div>
         {#if diferencia >= 0}
-          <TrendingUp
-            class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
-          />
+          <TrendingUp class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
         {:else}
-          <TrendingDown
-            class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
-          />
+          <TrendingDown class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
         {/if}
       </div>
       <!-- Botón para agregar transacción -->
@@ -212,9 +204,7 @@
       <div
         class="col-span-1 md:col-span-2 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col min-w-0"
       >
-        <h2
-          class="text-base sm:text-lg font-semibold mb-2 sm:mb-4"
-        >
+        <h2 class="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
           Transacciones
         </h2>
         <TransactionTable transactions={formattedTransactions} />
@@ -224,21 +214,21 @@
       <div
         class="col-span-1 md:col-span-3 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col items-center min-w-0"
       >
-        <h2
-          class="text-base sm:text-lg font-semibold mb-2 sm:mb-4"
-        >
+        <h2 class="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
           Gráfica de transacciones
         </h2>
         {#if formattedTransactions.length > 0}
           <div class="flex-1 w-full flex items-center justify-center">
             <Chart
-              {labels}
-              incomeData={formattedTransactions.map((tx) =>
-                tx.type === "income" ? tx.amount : 0,
-              )}
-              expenseData={formattedTransactions.map((tx) =>
-                tx.type === "expense" ? tx.amount : 0,
-              )}
+              labels={labels.slice().reverse()}
+              incomeData={formattedTransactions
+                .slice()
+                .reverse()
+                .map((tx) => (tx.type === "income" ? tx.amount : 0))}
+              expenseData={formattedTransactions
+                .slice()
+                .reverse()
+                .map((tx) => (tx.type === "expense" ? tx.amount : 0))}
             />
           </div>
         {:else}
@@ -251,7 +241,9 @@
   <div
     class="p-4 sm:p-8 flex justify-center items-center min-h-screen bg-gray-50 [data-theme=dark]:bg-gray-900"
   >
-    <h1 class="text-xl sm:text-2xl font-bold text-gray-500 [data-theme=dark]:text-gray-300 animate-pulse">
+    <h1
+      class="text-xl sm:text-2xl font-bold text-gray-500 [data-theme=dark]:text-gray-300 animate-pulse"
+    >
       Cargando datos del usuario...
     </h1>
   </div>
