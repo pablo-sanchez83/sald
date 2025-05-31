@@ -1,19 +1,29 @@
 <script lang="ts">
   import { db, user } from "$lib/firebase";
   import type { FormattedTransaction, UserData } from "$lib/types";
-  import { doc, getDoc } from "firebase/firestore";
-  import Chart from "chart.js/auto";
+  import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
+  import Chart from "$lib/dashboardComponents/Chart.svelte";
+  import TransactionTable from "$lib/dashboardComponents/TransactionTable.svelte";
+    import NewTransactionForm from "$lib/dashboardComponents/NewTransactionForm.svelte";
 
   let userData: UserData | null;
   let formattedTransactions: FormattedTransaction[] = [];
   let diferencia = 0;
-  let chart: Chart | null = null;
-  let chartCanvas: HTMLCanvasElement;
 
   let transactionModal: HTMLDialogElement;
   let newType = "";
   let newDescription = "";
-  let newAmount: number | "" = "";
+  let newAmount: number = 0;
+
+  $: labels = formattedTransactions.map((tx) => {
+    const date = tx.date?.toDate
+      ? tx.date.toDate()
+      : new Date(tx.date.nanoseconds);
+    return date.toLocaleDateString("es-ES", {
+      month: "short",
+      year: "2-digit",
+    });
+  });
 
   $: if ($user) {
     fetchUserData();
@@ -35,14 +45,21 @@
             formattedDate: tx.date.toDate().toLocaleString(),
           };
         });
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const currentMonthExpenses = userData.transactions.filter(
+          (tx) =>
+            tx.type === "expense" &&
+            tx.date.toDate().getMonth() === currentMonth &&
+            tx.date.toDate().getFullYear() === currentYear
+        );
+
         diferencia =
           userData.salary -
-          userData.transactions.reduce(
-            (acc, tx) => acc + (tx.type === "expense" ? tx.amount : 0),
-            0,
-          );
-        // Renderiza la gráfica después de obtener los datos
-        setTimeout(renderChart, 0);
+          currentMonthExpenses.reduce((acc, tx) => acc + tx.amount, 0);
       } else {
         userData = null;
       }
@@ -50,53 +67,36 @@
       console.error("Error fetching user data:", error);
     }
   }
-  function renderChart() {
-    if (!chartCanvas) return;
-    if (chart) {
-      chart.destroy();
+
+  function handleTransactionSubmit(event: Event) {
+    event.preventDefault();
+    if (userData && $user) {
+      if (!newType || !newDescription || newAmount <= 0) return;
+
+      const newTransaction = {
+        type: newType as "income" | "expense",
+        description: newDescription,
+        amount: parseFloat(newAmount.toFixed(2)),
+        date: Timestamp.now(),
+      };
+
+      // Agregar la nueva transacción al usuario
+      userData.transactions.push(newTransaction);
+      userData.transactions.sort((a, b) => b.date.seconds - a.date.seconds);
+
+      // Actualizar el usuario en Firestore
+      const docRef = doc(db, "users", $user.uid);
+      updateDoc(docRef, {
+        transactions: userData.transactions,
+      }).then(() => {
+        // Limpiar el formulario y cerrar el modal
+        newType = "";
+        newDescription = "";
+        newAmount = 0;
+        transactionModal.close();
+        fetchUserData(); // Refrescar los datos del usuario
+      });
     }
-
-    // Usar las mismas fechas para ambos datasets
-    const labels = formattedTransactions.map((tx) => tx.formattedDate);
-
-    // Mapear los montos, dejando 0 donde no corresponde el tipo
-    const incomeData = formattedTransactions.map((tx) =>
-      tx.type === "income" ? tx.amount : 0,
-    );
-    const expenseData = formattedTransactions.map((tx) =>
-      tx.type === "expense" ? tx.amount : 0,
-    );
-
-    chart = new Chart(chartCanvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Ingresos",
-            data: incomeData,
-            borderColor: "rgb(34,197,94)",
-            backgroundColor: "rgba(34,197,94,0.2)",
-            tension: 0.2,
-            fill: false,
-          },
-          {
-            label: "Gastos",
-            data: expenseData,
-            borderColor: "rgb(239,68,68)",
-            backgroundColor: "rgba(239,68,68,0.2)",
-            tension: 0.2,
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true },
-        },
-      },
-    });
   }
 </script>
 
@@ -156,7 +156,7 @@
           ></circle></svg
         >
       </div>
-
+      <!-- Botón para agregar transacción -->
       <button
         class="col-span-1 md:col-span-5 row-span-1 bg-blue-600 text-white rounded-xl shadow-lg p-4 sm:p-6 flex items-center justify-center hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
         on:click={() => transactionModal.showModal()}
@@ -165,81 +165,20 @@
           >Agregar transacción</span
         >
       </button>
+      <!-- Modal para agregar transacción -->
       <dialog
         bind:this={transactionModal}
         id="transaction_modal"
         class="modal p-0 bg-transparent"
       >
         <div class="modal-box">
-          <form
-            method="dialog"
-          >
-            <button
-              type="button"
-              class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 transition-colors text-xl"
-              on:click={() => transactionModal.close()}
-              aria-label="Cerrar"
-              tabindex="0"
-            >
-              &times;
-            </button>
-            <h2 class="text-xl font-bold text-blue-700 mb-1 text-center">
-              Nueva transacción
-            </h2>
-            <div class="flex flex-col gap-2">
-              <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-600">Tipo</span>
-                <select
-                  bind:value={newType}
-                  required
-                  class="border border-blue-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                >
-                  <option value="" disabled selected>Selecciona tipo</option>
-                  <option value="income">Ingreso</option>
-                  <option value="expense">Gasto</option>
-                </select>
-              </label>
-              <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-600"
-                  >Descripción</span
-                >
-                <input
-                  type="text"
-                  bind:value={newDescription}
-                  required
-                  class="border border-blue-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  placeholder="Descripción"
-                />
-              </label>
-              <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-600">Monto</span>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  bind:value={newAmount}
-                  required
-                  class="border border-blue-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  placeholder="Monto"
-                />
-              </label>
-            </div>
-            <div class="flex gap-3 justify-end mt-2">
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition font-semibold"
-                on:click={() => transactionModal.close()}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-semibold shadow"
-              >
-                Guardar
-              </button>
-            </div>
-          </form>
+          <NewTransactionForm
+            bind:newType
+            bind:newDescription
+            bind:newAmount
+            on:submit={handleTransactionSubmit}
+            on:close={() => transactionModal.close()}
+          />
         </div>
       </dialog>
       <!-- Tabla de transacciones -->
@@ -251,46 +190,7 @@
         >
           Transacciones
         </h2>
-        <div class="overflow-y-auto max-h-[40vh] sm:max-h-[400px]">
-          <table class="min-w-full text-xs sm:text-sm">
-            <thead>
-              <tr class="text-gray-500 border-b">
-                <th class="py-2 px-2 text-left">#</th>
-                <th class="py-2 px-2 text-left">Fecha</th>
-                <th class="py-2 px-2 text-left">Descripción</th>
-                <th class="py-2 px-2 text-left">Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#if userData.transactions.length > 0}
-                {#each formattedTransactions as transaction, index}
-                  <tr
-                    class="border-b last:border-b-0 {transaction.type ==
-                    'income'
-                      ? 'bg-green-50'
-                      : 'bg-red-50'}"
-                  >
-                    <td class="py-2 px-2">{index + 1}</td>
-                    <td class="py-2 px-2">{transaction.formattedDate}</td>
-                    <td class="py-2 px-2">{transaction.description}</td>
-                    <td
-                      class="py-2 px-2 font-semibold {transaction.type ==
-                      'income'
-                        ? 'text-green-600'
-                        : 'text-red-600'}">{transaction.amount}</td
-                    >
-                  </tr>
-                {/each}
-              {:else}
-                <tr>
-                  <td colspan="4" class="text-center py-4 text-gray-400"
-                    >No hay transacciones registradas.</td
-                  >
-                </tr>
-              {/if}
-            </tbody>
-          </table>
-        </div>
+        <TransactionTable transactions={formattedTransactions} />
       </div>
 
       <!-- Gráfica -->
@@ -304,11 +204,15 @@
         </h2>
         {#if formattedTransactions.length > 0}
           <div class="flex-1 w-full flex items-center justify-center">
-            <canvas
-              bind:this={chartCanvas}
-              class="w-full h-full max-h-[400px] max-w-full"
-              style="display:block;"
-            ></canvas>
+            <Chart
+              {labels}
+              incomeData={formattedTransactions.map((tx) =>
+                tx.type === "income" ? tx.amount : 0,
+              )}
+              expenseData={formattedTransactions.map((tx) =>
+                tx.type === "expense" ? tx.amount : 0,
+              )}
+            />
           </div>
         {:else}
           <p class="text-gray-400">No hay datos para mostrar.</p>
