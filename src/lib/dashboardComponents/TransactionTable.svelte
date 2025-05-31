@@ -127,10 +127,7 @@
             {#if paginatedTransactions.length > 0}
                 {#each paginatedTransactions as transaction, index}
                     <tr
-                        class="border-b last:border-b-0 {transaction.type ==
-                        'income'
-                            ? 'bg-green-50'
-                            : 'bg-red-50'}"
+                        class="border-b last:border-b-0"
                     >
                         <td class="py-2 px-2"
                             >{(currentPage - 1) * itemsPerPage + index + 1}</td

@@ -6,8 +6,11 @@
   import TransactionTable from "$lib/dashboardComponents/TransactionTable.svelte";
   import NewTransactionForm from "$lib/dashboardComponents/NewTransactionForm.svelte";
   import { TrendingDown, TrendingUp, Wallet } from "lucide-svelte";
+  import { onDestroy, onMount } from "svelte";
+  import { reloadTrigger } from "$lib/reload";
 
   let userData: UserData | null;
+  let unsubscribe: () => void;
   let formattedTransactions: FormattedTransaction[] = [];
   let diferencia = 0;
 
@@ -84,6 +87,20 @@
     }
   }
 
+  onMount(() => {
+    fetchUserData();
+
+    unsubscribe = reloadTrigger.subscribe((value) => {
+      fetchUserData();
+    });
+  });
+
+  onDestroy(() => {
+    if (typeof unsubscribe === "function") {
+      unsubscribe();
+    }
+  });
+
   function handleTransactionSubmit(event: Event) {
     event.preventDefault();
     if (userData && $user) {
@@ -117,58 +134,58 @@
 </script>
 
 {#if userData}
-  <div class="p-2 sm:p-4 h-screen bg-gradient-to-br from-gray-50 to-gray-200">
+  <div class="p-2 sm:p-4 h-screen">
     <div
       class="w-full min-h-full mx-auto grid grid-cols-1 md:grid-cols-5 grid-rows-8 gap-4 sm:gap-6"
     >
       <!-- Salario -->
       <div
-        class="col-span-1 md:col-span-3 row-span-2 flex items-center justify-between bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 min-w-0"
+        class="col-span-1 md:col-span-3 row-span-2 flex items-center justify-between rounded-xl shadow-lg p-4 sm:p-6 border min-w-0"
       >
         <div class="min-w-0">
-          <h2 class="text-base sm:text-lg font-semibold text-gray-600 truncate">
+          <h2 class="text-base sm:text-lg font-semibold truncate">
             Salario mensual
           </h2>
           <p
-            class="text-2xl sm:text-3xl font-bold text-green-600 mt-2 truncate"
+            class="text-2xl sm:text-3xl font-bold mt-2 truncate"
           >
             ${userData.salary.toLocaleString()}
           </p>
         </div>
         <Wallet
-          class="w-10 h-10 sm:w-12 sm:h-12 text-green-200 flex-shrink-0"
+          class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
         />
       </div>
 
       <!-- Diferencia mensual -->
       <div
-        class="col-span-1 md:col-span-2 row-span-2 flex items-center justify-between bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 min-w-0"
+        class="col-span-1 md:col-span-2 row-span-2 flex items-center justify-between rounded-xl shadow-lg p-4 sm:p-6 border min-w-0"
       >
         <div class="min-w-0">
-          <h2 class="text-base sm:text-lg font-semibold text-gray-600 truncate">
+          <h2 class="text-base sm:text-lg font-semibold truncate">
             Diferencia mensual
           </h2>
           <p
             class="text-2xl sm:text-3xl font-bold {diferencia >= 0
-              ? 'text-green-600'
-              : 'text-red-600'} mt-2 truncate"
+              ? 'text-green-600 [data-theme=dark]:text-green-400'
+              : 'text-red-600 [data-theme=dark]:text-red-400'} mt-2 truncate"
           >
             {diferencia >= 0 ? "+" : ""}{diferencia.toLocaleString()}
           </p>
         </div>
         {#if diferencia >= 0}
           <TrendingUp
-            class="w-10 h-10 sm:w-12 sm:h-12 text-blue-200 flex-shrink-0"
+            class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
           />
         {:else}
           <TrendingDown
-            class="w-10 h-10 sm:w-12 sm:h-12 text-red-200 flex-shrink-0"
+            class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
           />
         {/if}
       </div>
       <!-- Botón para agregar transacción -->
       <button
-        class="col-span-1 md:col-span-5 row-span-1 bg-blue-600 text-white rounded-xl shadow-lg p-4 sm:p-6 flex items-center justify-center hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        class="btn h-full cursor-pointer col-span-1 md:col-span-5 row-span-1 rounded-xl shadow-lg p-4 sm:p-6 flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50"
         on:click={() => transactionModal.showModal()}
       >
         <span class="text-base sm:text-lg font-semibold"
@@ -193,10 +210,10 @@
       </dialog>
       <!-- Tabla de transacciones -->
       <div
-        class="col-span-1 md:col-span-2 row-span-5 bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 flex flex-col min-w-0"
+        class="col-span-1 md:col-span-2 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col min-w-0"
       >
         <h2
-          class="text-base sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-4"
+          class="text-base sm:text-lg font-semibold mb-2 sm:mb-4"
         >
           Transacciones
         </h2>
@@ -205,10 +222,10 @@
 
       <!-- Gráfica -->
       <div
-        class="col-span-1 md:col-span-3 row-span-5 bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 flex flex-col items-center min-w-0"
+        class="col-span-1 md:col-span-3 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col items-center min-w-0"
       >
         <h2
-          class="text-base sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-4"
+          class="text-base sm:text-lg font-semibold mb-2 sm:mb-4"
         >
           Gráfica de transacciones
         </h2>
@@ -225,16 +242,16 @@
             />
           </div>
         {:else}
-          <p class="text-gray-400">No hay datos para mostrar.</p>
+          <p>No hay datos para mostrar.</p>
         {/if}
       </div>
     </div>
   </div>
 {:else}
   <div
-    class="p-4 sm:p-8 flex justify-center items-center min-h-screen bg-gray-50"
+    class="p-4 sm:p-8 flex justify-center items-center min-h-screen bg-gray-50 [data-theme=dark]:bg-gray-900"
   >
-    <h1 class="text-xl sm:text-2xl font-bold text-gray-500 animate-pulse">
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-500 [data-theme=dark]:text-gray-300 animate-pulse">
       Cargando datos del usuario...
     </h1>
   </div>
