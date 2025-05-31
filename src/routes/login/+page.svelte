@@ -2,7 +2,6 @@
     import { goto } from "$app/navigation";
     import { auth, db, user } from "$lib/firebase";
     import {
-    createUserWithEmailAndPassword,
         GoogleAuthProvider,
         signInWithEmailAndPassword,
         signInWithPopup,
@@ -19,9 +18,17 @@
         try {
             const result = await signInWithPopup(auth, provider);
             // The signed-in user info.
-            const user = result.user;
-            await getDoc(doc(db, "users", user.uid));
-            goto("/dashboard");
+            if (result.user) {
+                const user = result.user;
+                await getDoc(doc(db, "users", user.uid));
+                goto("/dashboard");
+            } else {
+                const result_v2 = await signInWithPopup(auth, provider);
+                const user = result_v2.user;
+                await getDoc(doc(db, "users", user.uid));
+                goto("/dashboard");
+            }
+            
             console.log("User signed in:", user);
         } catch (error) {
             console.error("Error signing in with Google:", error);
