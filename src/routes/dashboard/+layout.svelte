@@ -6,6 +6,7 @@
     import { db, user } from "$lib/firebase";
     import { doc, getDoc, updateDoc } from "firebase/firestore";
     import { reloadTrigger } from "$lib/reload";
+    import { goto } from '$app/navigation';
 
     let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -17,17 +18,29 @@
 
     let theme: 'light' | 'dark' = $state('light');
 
-    if ($user) {
-        fetchUserData();
-    }
-
     let userData: UserData | null;
-
     let showProfileModal = $state(false);
     let showSettingsModal = $state(false);
-
     let profileDisplayName = $state("");
     let profileSalary: number = $state(0);
+
+    // --- LOADING Y REDIRECCIÓN ---
+    let loading = $state(true);
+    let timeout: ReturnType<typeof setTimeout>;
+
+    $effect(() => {
+        // Si el usuario ya está cargado, deja de cargar y limpia timeout
+        if ($user) {
+            loading = false;
+            clearTimeout(timeout);
+            fetchUserData();
+        } else {
+            loading = true;
+            timeout = setTimeout(() => {
+                if (!user) goto('/login');
+            }, 2500);
+        }
+    });
 
     $effect(() => {
         if (showProfileModal && userData) {
@@ -47,7 +60,6 @@
         theme = checked ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
 
-        // Actualiza en Firestore si hay usuario
         if (userData && $user) {
             try {
                 const userDoc = doc(db, "users", $user.uid);
@@ -74,6 +86,11 @@
                 userData = docSnap.data() as UserData;
                 if (!userData.transactions) {
                     userData.transactions = [];
+                }
+                if (userData.settings.theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
                 }
             } else {
                 userData = null;
