@@ -1,10 +1,13 @@
+import type { Timestamp } from "firebase/firestore";
+
 export interface UserData {
     uid: string;
     email: string;
-    displayName: string;
+    username: string;
     settings: Settings;
     transactions: Transaction[];
     createdAt: Date;
+    salary: number;
 }
 interface Settings {
     theme: 'light' | 'dark';
@@ -12,7 +15,14 @@ interface Settings {
 }
 interface Transaction {
     amount: number;
-    date: Date;
+    date: Timestamp;
+    type: 'income' | 'expense';
+    description: string;
+}
+export interface FormattedTransaction {
+    amount: number;
+    date: Timestamp;
+    formattedDate: String;
     type: 'income' | 'expense';
     description: string;
 }
