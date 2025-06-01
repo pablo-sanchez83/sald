@@ -24,6 +24,8 @@
         isOpen = !isOpen;
     }
 
+    let mobileMenuOpen = $state(false);
+
     selectedAccountId.subscribe((value) => ($selectedAccountId = value));
 
     let theme: "light" | "dark" = $state("light");
@@ -146,7 +148,7 @@
 <div class="flex h-screen">
     <!-- Sidebar -->
     <nav
-        class={`fixed top-2 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between border-r`}
+        class={`fixed top-2 left-0 h-full z-30 transition-all duration-300 border-r ${isOpen ? "w-64 px-4" : "w-16 px-2"} md:flex flex-col justify-between hidden`}
     >
         <!-- Arriba: enlaces -->
         <div>
@@ -228,9 +230,82 @@
         </div>
     </nav>
 
+    <nav
+        class="flex md:hidden items-center justify-between px-4 py-2 bg-base-100 border-b w-full fixed top-0 left-0 z-40"
+    >
+        <button
+            class="flex items-center"
+            aria-label="Abrir menú"
+            onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+        >
+            <Menu class="h-6 w-6 text-base-content" />
+        </button>
+        <span class="font-bold text-lg">Saldo</span>
+        <div></div>
+    </nav>
+
+    {#if mobileMenuOpen}
+        <div
+            class="fixed top-12 left-0 w-full bg-base-100 shadow-lg z-50 md:hidden"
+        >
+            <div class="flex justify-between">
+                <!-- Opciones a la izquierda -->
+                <ul class="menu p-2 flex flex-col gap-2">
+                    <li>
+                        <a
+                            href="/dashboard"
+                            onclick={() => (mobileMenuOpen = false)}
+                        >
+                            <Home class="h-5 w-5" /> Panel de control
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="/dashboard/table"
+                            onclick={() => (mobileMenuOpen = false)}
+                        >
+                            <Table class="h-5 w-5" /> Tabla de transacciones
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="/dashboard/budgets"
+                            onclick={() => (mobileMenuOpen = false)}
+                        >
+                            <PiggyBank class="h-5 w-5" /> Presupuestos
+                        </a>
+                    </li>
+                </ul>
+                <!-- Opciones a la derecha -->
+                <ul class="menu p-2 flex flex-col gap-2 items-end">
+                    <li>
+                        <button
+                            onclick={() => {
+                                showSettingsModal = true;
+                                mobileMenuOpen = false;
+                            }}
+                        >
+                            <Settings class="h-5 w-5" /> Ajustes
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onclick={() => {
+                                showProfileModal = true;
+                                mobileMenuOpen = false;
+                            }}
+                        >
+                            <User class="h-5 w-5" /> Perfil
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    {/if}
+
     <!-- Main content -->
     <div
-        class={`flex-1 transition-all duration-300 ${isOpen ? "ml-64" : "ml-16"}`}
+        class={`flex-1 transition-all duration-300 pt-12 md:pt-0 ${isOpen ? "md:ml-64" : "md:ml-16"}`}
     >
         {@render children()}
     </div>
