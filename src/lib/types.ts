@@ -9,12 +9,13 @@ export interface UserData {
     createdAt: Date;
 }
 
-interface Account {
+export interface Account {
     id: string;
     balance: number;
     name: string;
     salary: number;
     currency: string;
+    budget: Budget;
     transactions: Transaction[];
 }
 interface Settings {
@@ -33,4 +34,15 @@ export interface FormattedTransaction {
     formattedDate: String;
     type: 'income' | 'expense';
     description: string;
+}
+
+export interface Budget {
+    total: number;
+    remaining: number;
+    items: BudgetItem[];
+}
+export interface BudgetItem {
+    description: string;
+    category: string;
+    amount: number;
 }
