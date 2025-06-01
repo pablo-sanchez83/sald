@@ -62,40 +62,6 @@
     }
 </script>
 
-<div class="flex items-center justify-between mb-2">
-    <div>
-        <label for="itemsPerPage" class="mr-2 text-xs sm:text-sm"
-            >Filas por página:</label
-        >
-        <select
-            id="itemsPerPage"
-            bind:value={itemsPerPage}
-            on:change={handleItemsPerPageChange}
-            class="border rounded px-1 py-0.5 text-xs sm:text-sm"
-        >
-            {#each itemsPerPageOptions as option}
-                <option value={option}>{option}</option>
-            {/each}
-        </select>
-    </div>
-    <div class="flex items-center gap-2">
-        <button
-            on:click={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            class="px-2 py-1 text-xs border rounded disabled:opacity-50"
-            >Anterior</button
-        >
-        <span class="text-xs sm:text-sm"
-            >Página {currentPage} de {totalPages}</span
-        >
-        <button
-            on:click={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            class="px-2 py-1 text-xs border rounded disabled:opacity-50"
-            >Siguiente</button
-        >
-    </div>
-</div>
 
 <div class="overflow-y-auto h-full">
     <table class="min-w-full text-xs sm:text-sm">

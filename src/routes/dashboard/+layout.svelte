@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { LayoutData } from "./$types";
-    import { Menu, Home, Settings, User } from "lucide-svelte";
+    import { Menu, Home, Settings, User, Table } from "lucide-svelte";
     import type { UserData } from "$lib/types";
     import { db, user } from "$lib/firebase";
     import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -17,7 +17,7 @@
     }
 
     let theme: 'light' | 'dark' = $state('light');
-    
+
     let userData: UserData | null = $state(null);
     let showProfileModal = $state(false);
     let showSettingsModal = $state(false);
@@ -104,18 +104,29 @@
 <div class="flex h-screen">
     <!-- Sidebar -->
     <nav
-        class={`transition-all duration-300 border-base-400 bg-base-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between`}
+        class={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between bg-white [data-theme=dark]:bg-gray-900 border-r`}
     >
         <!-- Top: Dashboard -->
         <ul class="menu p-0">
             <li>
-                <button
+                <a
                     class="flex items-center gap-2 tooltip"
                     data-tip="Dashboard"
+                    href="/dashboard"
                 >
                     <Home class="h-6 w-6" />
                     {#if isOpen}<span>Dashboard</span>{/if}
-                </button>
+                </a>
+            </li>
+            <li>
+                <a 
+                    class="flex items-center gap-2 tooltip"
+                    data-tip="Tabla de gastos"
+                    href="/dashboard/table"
+                    >
+                    <Table class="h-6 w-6" />
+                    {#if isOpen}<span>Tabla de gastos</span>{/if}
+                </a>
             </li>
         </ul>
 
@@ -156,7 +167,7 @@
     </nav>
 
     <!-- Main content -->
-    <div class="flex-1 bg-base-200">
+    <div class={`flex-1 transition-all duration-300 ${isOpen ? "ml-64" : "ml-16"}`}>
         {@render children()}
     </div>
 </div>

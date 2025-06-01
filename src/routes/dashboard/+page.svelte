@@ -134,35 +134,35 @@
 </script>
 
 {#if userData}
-  <div class="p-2 sm:p-4 h-screen">
+  <div class="p-1 sm:p-4 min-h-screen">
     <div
-      class="w-full min-h-full mx-auto grid grid-cols-1 md:grid-cols-5 grid-rows-8 gap-4 sm:gap-6"
+      class="w-full min-h-full mx-auto grid grid-cols-1 grid-rows-auto gap-2 sm:gap-6 md:grid-cols-5 md:grid-rows-5"
     >
       <!-- Salario -->
       <div
-        class="col-span-1 md:col-span-3 row-span-2 flex items-center justify-between rounded-xl shadow-lg p-4 sm:p-6 border min-w-0"
+        class="col-span-1 md:col-span-3 row-span-1 flex items-center justify-between rounded-xl shadow-lg p-2 sm:p-6 border min-w-0"
       >
         <div class="min-w-0">
-          <h2 class="text-base sm:text-lg font-semibold truncate">
+          <h2 class="text-sm sm:text-lg font-semibold truncate">
             Salario mensual
           </h2>
-          <p class="text-2xl sm:text-3xl font-bold mt-2 truncate">
+          <p class="text-xl sm:text-3xl font-bold mt-2 truncate">
             ${userData.salary.toLocaleString()}
           </p>
         </div>
-        <Wallet class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
+        <Wallet class="w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0" />
       </div>
 
       <!-- Diferencia mensual -->
       <div
-        class="col-span-1 md:col-span-2 row-span-2 flex items-center justify-between rounded-xl shadow-lg p-4 sm:p-6 border min-w-0"
+        class="col-span-1 md:col-span-2 row-span-1 flex items-center justify-between rounded-xl shadow-lg p-2 sm:p-6 border min-w-0"
       >
         <div class="min-w-0">
-          <h2 class="text-base sm:text-lg font-semibold truncate">
+          <h2 class="text-sm sm:text-lg font-semibold truncate">
             Diferencia mensual
           </h2>
           <p
-            class="text-2xl sm:text-3xl font-bold {diferencia >= 0
+            class="text-xl sm:text-3xl font-bold {diferencia >= 0
               ? 'text-green-600 [data-theme=dark]:text-green-400'
               : 'text-red-600 [data-theme=dark]:text-red-400'} mt-2 truncate"
           >
@@ -170,19 +170,17 @@
           </p>
         </div>
         {#if diferencia >= 0}
-          <TrendingUp class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
+          <TrendingUp class="w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0" />
         {:else}
-          <TrendingDown class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
+          <TrendingDown class="w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0" />
         {/if}
       </div>
       <!-- Botón para agregar transacción -->
       <button
-        class="btn h-full cursor-pointer col-span-1 md:col-span-5 row-span-1 rounded-xl shadow-lg p-4 sm:p-6 flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+        class="btn h-full cursor-pointer col-span-1 md:col-span-5 row-span-1 rounded-xl shadow-lg p-2 sm:p-6 flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm sm:text-lg"
         on:click={() => transactionModal.showModal()}
       >
-        <span class="text-base sm:text-lg font-semibold"
-          >Agregar transacción</span
-        >
+        <span class="font-semibold">Agregar transacción</span>
       </button>
       <!-- Modal para agregar transacción -->
       <dialog
@@ -202,23 +200,25 @@
       </dialog>
       <!-- Tabla de transacciones -->
       <div
-        class="col-span-1 md:col-span-2 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col min-w-0"
+        class="col-span-1 md:col-span-2 row-span-3 rounded-xl shadow-lg p-2 sm:p-6 border flex flex-col min-w-0"
       >
-        <h2 class="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
+        <h2 class="text-sm sm:text-lg font-semibold mb-2 sm:mb-4">
           Transacciones
         </h2>
-        <TransactionTable transactions={formattedTransactions} />
+        <div class="flex-1 min-h-0 overflow-x-auto">
+          <TransactionTable transactions={formattedTransactions} />
+        </div>
       </div>
 
       <!-- Gráfica -->
       <div
-        class="col-span-1 md:col-span-3 row-span-5 rounded-xl shadow-lg p-4 sm:p-6 border flex flex-col items-center min-w-0"
+        class="col-span-1 md:col-span-3 row-span-3 rounded-xl shadow-lg p-1 sm:p-4 border flex flex-col items-center min-w-0"
       >
-        <h2 class="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
+        <h2 class="text-sm sm:text-lg font-semibold mb-2 sm:mb-4">
           Gráfica de transacciones
         </h2>
         {#if formattedTransactions.length > 0}
-          <div class="flex-1 w-full flex items-center justify-center">
+          <div class="flex-1 w-full flex items-center justify-center overflow-x-auto">
             <Chart
               labels={labels.slice().reverse()}
               incomeData={formattedTransactions
@@ -232,17 +232,17 @@
             />
           </div>
         {:else}
-          <p>No hay datos para mostrar.</p>
+          <p class="text-xs sm:text-base">No hay datos para mostrar.</p>
         {/if}
       </div>
     </div>
   </div>
 {:else}
   <div
-    class="p-4 sm:p-8 flex justify-center items-center min-h-screen bg-gray-50 [data-theme=dark]:bg-gray-900"
+    class="p-4 sm:p-8 flex justify-center items-center min-h-screen"
   >
     <h1
-      class="text-xl sm:text-2xl font-bold text-gray-500 [data-theme=dark]:text-gray-300 animate-pulse"
+      class="text-xl sm:text-2xl font-bold animate-pulse"
     >
       Cargando datos del usuario...
     </h1>
