@@ -2,11 +2,8 @@
   import { db, user } from "$lib/firebase";
   import type { FormattedTransaction, UserData } from "$lib/types";
   import {
-    addDoc,
-    collection,
     doc,
     getDoc,
-    getDocs,
     Timestamp,
     updateDoc,
   } from "firebase/firestore";
@@ -16,7 +13,7 @@
   import { TrendingDown, TrendingUp, Wallet } from "lucide-svelte";
   import { onDestroy, onMount } from "svelte";
   import { reloadTrigger } from "$lib/reload";
-  import { selectedAccountId } from "$lib/accountStore";
+  import { selectedAccountId, isLoading } from "$lib/accountStore";
 
   let userData: UserData | null;
   let unsubscribe: () => void;
@@ -24,6 +21,11 @@
   let diferencia = 0;
 
   let transactionModal: HTMLDialogElement;
+
+  $: if ($reloadTrigger && userData && $selectedAccountId) {
+      fetchUserData();
+    }
+  
   let newType = "";
   let newDescription = "";
   let newAmount: number = 0;
@@ -120,8 +122,22 @@
     fetchUserData();
 
     unsubscribe = reloadTrigger.subscribe((value) => {
-      fetchUserData();
+      if (!isLoading) {
+        fetchUserData();
+      }
     });
+
+    // Listen for account changes
+    const accountUnsubscribe = selectedAccountId.subscribe(() => {
+      if (!isLoading) {
+        fetchUserData();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (accountUnsubscribe) accountUnsubscribe();
+    };
   });
 
   onDestroy(() => {
@@ -151,7 +167,9 @@
       selectedAccount.balance +=
         newType === "income" ? newAmount : -newAmount;
       
-      selectedAccount.transactions.push(newTransaction);
+      // Ordenar las transacciones por fecha (más reciente primero)
+      selectedAccount.transactions = [...selectedAccount.transactions, newTransaction]
+        .sort((a, b) => b.date.toMillis() - a.date.toMillis());
 
       // Guardar el array actualizado en Firestore
       const docRef = doc(db, "users", $user.uid);

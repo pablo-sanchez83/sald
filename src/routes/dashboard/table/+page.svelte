@@ -4,6 +4,10 @@
     import { doc, getDoc } from "firebase/firestore";
     import { ArrowDownCircle, ArrowUpCircle } from "lucide-svelte";
     import { onMount } from "svelte";
+    import { selectedAccountId } from "$lib/accountStore";
+
+    let selectedAccountIdValue = "";
+    selectedAccountId.subscribe(value => selectedAccountIdValue = value);
 
     let transactions: FormattedTransaction[] = [];
     let userData: UserData | null = null;
@@ -19,8 +23,16 @@
                 userData = null;
             }
         });
+
+        // Suscribirse a cambios en la cuenta seleccionada
+        const accountUnsubscribe = selectedAccountId.subscribe(async () => {
+            if ($user) {
+                await fetchUserData();
+            }
+        });
         return () => {
             if (unsubscribe) unsubscribe();
+            if (accountUnsubscribe) accountUnsubscribe();
         };
     });
 
@@ -31,17 +43,17 @@
 
             if (docSnap.exists()) {
                 userData = docSnap.data() as UserData;
-                if (!userData.transactions) {
-                    userData.transactions = [];
-                }
-                transactions = userData.transactions.map((tx) => {
-                    return {
-                        ...tx,
-                        formattedDate: tx.date.toDate().toLocaleString(),
-                    };
-                });
+                const selectedAccount = userData?.accounts.find(acc => acc.id === $selectedAccountId);
+                if (!selectedAccount) return;
+
+                // Ordenar las transacciones por fecha (más reciente primero)
+                transactions = (selectedAccount.transactions || []).map(tx => ({
+                    ...tx,
+                    formattedDate: tx.date.toDate().toLocaleString()
+                })).sort((a, b) => b.date.toMillis() - a.date.toMillis());
             } else {
                 userData = null;
+                transactions = [];
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
@@ -53,7 +65,7 @@
     const itemsPerPageOptions = [5, 10, 20, 50];
 
     // Ordenamiento
-    let sortField: "formattedDate" | "amount" | "type" | null = null;
+    let sortField: "formattedDate" | "amount" | "type" | null = "formattedDate";
     let sortDirection: "asc" | "desc" = "asc";
 
     function sortBy(field: "formattedDate" | "amount" | "type") {
