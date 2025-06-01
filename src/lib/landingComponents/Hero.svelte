@@ -23,17 +23,19 @@
             </div>
             
             <div class="flex flex-col sm:flex-row gap-4">
-              <button 
+              <a 
                 class="btn btn-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
+                href="/signup"
+                >
                 Empezar gratis
                 <ArrowRight class="ml-2 h-5 w-5" />
-              </button>
-              <button 
+              </a>
+              <a 
                 class="btn btn-lg btn-outline px-8 py-4 text-lg font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
-              >
+                href="/demo"
+                >
                 Ver demo
-              </button>
+              </a>
             </div>
             
             <div class="flex items-center space-x-8 pt-4">
