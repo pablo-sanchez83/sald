@@ -10,7 +10,7 @@
 
     let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-    let isOpen = $state(true);
+    let isOpen = $state(false);
 
     function toggleSidebar() {
         isOpen = !isOpen;
