@@ -52,5 +52,10 @@
     if (chart) chart.destroy();
   });
 </script>
-
-<canvas bind:this={chartCanvas} class="w-full h-full max-h-[400px] max-w-full" style="display:block;"></canvas>
+<div class="w-full overflow-x-auto">
+  <canvas
+    bind:this={chartCanvas}
+    class="w-[600px] max-w-full h-[300px] sm:h-[400px]"
+    style="display:block;"
+  ></canvas>
+</div>
