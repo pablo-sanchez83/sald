@@ -184,7 +184,7 @@
 
 {#if userData && budget && selectedAccount}
     <div
-        class="w-full max-w-lg mx-auto mt-0 sm:mt-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg p-2 sm:p-8 border-0 sm:border bg-transparent sm:bg-base-100 animate-fade-in"
+        class="w-full max-w-lg mx-auto mt-0 sm:mt-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg p-4 sm:p-8 border-0 sm:border bg-transparent sm:bg-base-100 animate-fade-in"
     >
         <h2 class="text-2xl font-bold text-center mb-6 text-primary">
             Presupuesto de <span class="text-success">{userData.username}</span>
