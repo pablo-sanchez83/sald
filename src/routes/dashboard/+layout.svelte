@@ -1,13 +1,20 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { LayoutData } from "./$types";
-    import { Menu, Home, Settings, User, Table } from "lucide-svelte";
+    import {
+        Menu,
+        Home,
+        Settings,
+        User,
+        Table,
+        PiggyBank,
+    } from "lucide-svelte";
     import type { UserData } from "$lib/types";
     import { db, user } from "$lib/firebase";
     import { doc, getDoc, updateDoc } from "firebase/firestore";
     import { reloadTrigger } from "$lib/reload";
-    import { goto } from '$app/navigation';
-    import {selectedAccountId} from "$lib/accountStore";
+    import { goto } from "$app/navigation";
+    import { selectedAccountId } from "$lib/accountStore";
 
     let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -17,9 +24,9 @@
         isOpen = !isOpen;
     }
 
-    selectedAccountId.subscribe(value => $selectedAccountId = value);
+    selectedAccountId.subscribe((value) => ($selectedAccountId = value));
 
-    let theme: 'light' | 'dark' = $state('light');
+    let theme: "light" | "dark" = $state("light");
     let isDarkTheme = $state(false);
 
     let userData: UserData | null = $state(null);
@@ -43,14 +50,16 @@
         } else {
             loading = true;
             timeout = setTimeout(() => {
-                if (!user) goto('/login');
+                if (!user) goto("/login");
             }, 2500);
         }
     });
 
     function initializeProfileModal() {
         if (!hasInitialized && userData) {
-            const selectedAccount = userData.accounts.find(acc => acc.id === $selectedAccountId);
+            const selectedAccount = userData.accounts.find(
+                (acc) => acc.id === $selectedAccountId,
+            );
             profileDisplayName = userData.username;
             profileSalary = selectedAccount?.salary || 0;
             hasInitialized = true;
@@ -65,20 +74,20 @@
 
     $effect(() => {
         if (showSettingsModal && userData) {
-            theme = userData.settings?.theme || 'light';
+            theme = userData.settings?.theme || "light";
         }
     });
 
     async function handleThemeChange(event: Event) {
         const checked = (event.target as HTMLInputElement).checked;
-        theme = checked ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
+        theme = checked ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", theme);
 
         if (userData && $user) {
             try {
                 const userDoc = doc(db, "users", $user.uid);
                 await updateDoc(userDoc, {
-                    'settings.theme': theme
+                    "settings.theme": theme,
                 });
                 userData.settings.theme = theme;
             } catch (e) {
@@ -88,7 +97,7 @@
     }
 
     $effect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute("data-theme", theme);
     });
 
     async function fetchUserData() {
@@ -100,16 +109,25 @@
                 userData = docSnap.data() as UserData;
                 let selectedAccount = null;
                 if (userData && userData.accounts) {
-                    selectedAccount = userData.accounts.find(acc => acc.id === $selectedAccountId);
+                    selectedAccount = userData.accounts.find(
+                        (acc) => acc.id === $selectedAccountId,
+                    );
                 }
                 if (selectedAccount && !selectedAccount.transactions) {
                     selectedAccount.transactions = [];
                 }
-                if (userData && userData.settings && userData.settings.theme === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                if (
+                    userData &&
+                    userData.settings &&
+                    userData.settings.theme === "dark"
+                ) {
+                    document.documentElement.setAttribute("data-theme", "dark");
                     isDarkTheme = true;
                 } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.setAttribute(
+                        "data-theme",
+                        "light",
+                    );
                     isDarkTheme = false;
                 }
                 // Refresh data after account change
@@ -128,77 +146,92 @@
 <div class="flex h-screen">
     <!-- Sidebar -->
     <nav
-    class={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between border-r`}
->
-    <!-- Arriba: enlaces -->
-    <div>
-        <ul class="menu p-0 mb-2">
-            <li>
-                <a
-                    href="/dashboard"
-                    data-tip="Panel de control"
-                    class="flex items-center gap-2 tooltip"
-                >
-                    <Home class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Panel de control</span>{/if}
-                </a>
-            </li>
-            <li>
-                <a
-                    href="/dashboard/table"
-                    data-tip="Tabla de transacciones"
-                    class="flex items-center gap-2 tooltip"
-                >
-                    <Table class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Tabla de transacciones</span>{/if}
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Abajo: select, settings, profile, toggle -->
-    <div>
-        <ul class="menu p-0 mb-2">
-            {#if userData && userData.accounts && userData.accounts.length > 0}
+        class={`fixed top-2 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between border-r`}
+    >
+        <!-- Arriba: enlaces -->
+        <div>
+            <ul class="menu p-0 mb-2">
                 <li>
-
+                    <a
+                        href="/dashboard"
+                        data-tip="Panel de control"
+                        class="flex items-center gap-2 tooltip tooltip-right"
+                        class:tooltip={!isOpen}
+                    >
+                        <Home class="h-6 w-6 text-base-content" />
+                        {#if isOpen}<span>Panel de control</span>{/if}
+                    </a>
                 </li>
-            {/if}
-            <li>
-                <button
-                    class="flex items-center gap-2 tooltip"
-                    data-tip="Ajustes"
-                    onclick={() => (showSettingsModal = true)}
-                >
-                    <Settings class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Ajustes</span>{/if}
-                </button>
-            </li>
-            <li>
-                <button
-                    class="flex items-center gap-2 tooltip"
-                    data-tip="Perfil"
-                    onclick={() => (showProfileModal = true)}
-                >
-                    <User class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Perfil</span>{/if}
-                </button>
-            </li>
-            <li>
-                <button
-                    class="flex items-center gap-2"
-                    aria-label="Toggle sidebar"
-                    onclick={toggleSidebar}
-                >
-                    <Menu class="h-6 w-6 fill-current text-base-content" />
-                </button>
-            </li>
-        </ul>
-    </div>
-</nav>
+                <li>
+                    <a
+                        href="/dashboard/table"
+                        data-tip="Tabla de transacciones"
+                        class="flex items-center gap-2 tooltip tooltip-right"
+                        class:tooltip={!isOpen}
+                    >
+                        <Table class="h-6 w-6 text-base-content" />
+                        {#if isOpen}<span>Tabla de transacciones</span>{/if}
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="/dashboard/budgets"
+                        data-tip="Presupuestos"
+                        class="flex items-center gap-2 tooltip tooltip-right"
+                        class:tooltip={!isOpen}
+                    >
+                        <PiggyBank class="h-6 w-6 text-base-content" />
+                        {#if isOpen}<span>Presupuestos</span>{/if}
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Abajo: select, settings, profile, toggle -->
+        <div>
+            <ul class="menu p-0 mb-2">
+                {#if userData && userData.accounts && userData.accounts.length > 0}
+                    <li></li>
+                {/if}
+                <li>
+                    <button
+                        class="flex items-center gap-2 tooltip tooltip-right"
+                        data-tip="Ajustes"
+                        onclick={() => (showSettingsModal = true)}
+                        class:tooltip={!isOpen}
+                    >
+                        <Settings class="h-6 w-6 text-base-content" />
+                        {#if isOpen}<span>Ajustes</span>{/if}
+                    </button>
+                </li>
+                <li>
+                    <button
+                        class="flex items-center gap-2 tooltip tooltip-right"
+                        data-tip="Perfil"
+                        onclick={() => (showProfileModal = true)}
+                        class:tooltip={!isOpen}
+                    >
+                        <User class="h-6 w-6 text-base-content" />
+                        {#if isOpen}<span>Perfil</span>{/if}
+                    </button>
+                </li>
+                <li>
+                    <button
+                        class="flex items-center gap-2"
+                        aria-label="Toggle sidebar"
+                        onclick={toggleSidebar}
+                    >
+                        <Menu class="h-6 w-6 text-base-content" />
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
     <!-- Main content -->
-    <div class={`flex-1 transition-all duration-300 ${isOpen ? "ml-64" : "ml-16"}`}>
+    <div
+        class={`flex-1 transition-all duration-300 ${isOpen ? "ml-64" : "ml-16"}`}
+    >
         {@render children()}
     </div>
 </div>
@@ -218,17 +251,30 @@
                             const userDoc = doc(db, "users", $user.uid);
                             await updateDoc(userDoc, {
                                 username: profileDisplayName,
-                                accounts: userData.accounts.map(acc => 
+                                accounts: userData.accounts.map((acc) =>
                                     acc.id === $selectedAccountId
-                                        ? { ...acc, salary: typeof profileSalary === "number" ? profileSalary : Number(profileSalary) }
-                                        : acc
-                                )
+                                        ? {
+                                              ...acc,
+                                              salary:
+                                                  typeof profileSalary ===
+                                                  "number"
+                                                      ? profileSalary
+                                                      : Number(profileSalary),
+                                          }
+                                        : acc,
+                                ),
                             });
                             userData.username = profileDisplayName;
-                            userData.accounts = userData.accounts.map(acc =>
+                            userData.accounts = userData.accounts.map((acc) =>
                                 acc.id === $selectedAccountId
-                                    ? { ...acc, salary: typeof profileSalary === "number" ? profileSalary : Number(profileSalary) }
-                                    : acc
+                                    ? {
+                                          ...acc,
+                                          salary:
+                                              typeof profileSalary === "number"
+                                                  ? profileSalary
+                                                  : Number(profileSalary),
+                                      }
+                                    : acc,
                             );
                             showProfileModal = false;
                             reloadTrigger.update((n) => n + 1);
@@ -250,7 +296,9 @@
                             const target = e.target as HTMLSelectElement | null;
                             if (target && userData) {
                                 selectedAccountId.set(target.value);
-                                const selectedAccount = userData.accounts.find(acc => acc.id === target.value);
+                                const selectedAccount = userData.accounts.find(
+                                    (acc) => acc.id === target.value,
+                                );
                                 if (selectedAccount) {
                                     profileSalary = selectedAccount.salary;
                                 }
@@ -260,7 +308,9 @@
                     >
                         {#if userData}
                             {#each userData.accounts as account}
-                                <option value={account.id}>{account.name}</option>
+                                <option value={account.id}
+                                    >{account.name}</option
+                                >
                             {/each}
                         {/if}
                     </select>
@@ -333,7 +383,7 @@
                     type="checkbox"
                     value="dark"
                     class="toggle theme-controller"
-                    checked={theme === 'dark'}
+                    checked={theme === "dark"}
                     onchange={handleThemeChange}
                 />
                 <svg
