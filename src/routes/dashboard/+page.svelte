@@ -1,13 +1,22 @@
 <script lang="ts">
   import { db, user } from "$lib/firebase";
   import type { FormattedTransaction, UserData } from "$lib/types";
-  import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
+  import {
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    Timestamp,
+    updateDoc,
+  } from "firebase/firestore";
   import Chart from "$lib/dashboardComponents/Chart.svelte";
   import TransactionTable from "$lib/dashboardComponents/TransactionTable.svelte";
   import NewTransactionForm from "$lib/dashboardComponents/NewTransactionForm.svelte";
   import { TrendingDown, TrendingUp, Wallet } from "lucide-svelte";
   import { onDestroy, onMount } from "svelte";
   import { reloadTrigger } from "$lib/reload";
+  import { selectedAccountId } from "$lib/accountStore";
 
   let userData: UserData | null;
   let unsubscribe: () => void;
@@ -19,6 +28,10 @@
   let newDescription = "";
   let newAmount: number = 0;
 
+  function getSelectedAccount() {
+    return userData?.accounts.find((acc) => acc.id === $selectedAccountId);
+  }
+
   $: labels = formattedTransactions.map((tx) => {
     const date = tx.date?.toDate
       ? tx.date.toDate()
@@ -29,10 +42,6 @@
     });
   });
 
-  $: if ($user) {
-    fetchUserData();
-  }
-
   async function fetchUserData() {
     try {
       const docRef = doc(db, "users", $user ? $user.uid : "");
@@ -40,32 +49,52 @@
 
       if (docSnap.exists()) {
         userData = docSnap.data() as UserData;
-        if (!userData.transactions) {
-          userData.transactions = [];
-        }
-        formattedTransactions = userData.transactions.map((tx) => {
-          return {
-            ...tx,
-            formattedDate: tx.date.toDate().toLocaleString(),
-          };
-        });
+        const selectedAccount = getSelectedAccount();
+        if (!selectedAccount) return;
+
+        // Leer transacciones directamente del array de la cuenta seleccionada
+        const transactions = selectedAccount.transactions ?? [];
+
+        formattedTransactions = transactions.map((tx) => ({
+          amount: tx.amount,
+          date: tx.date,
+          type: tx.type,
+          description: tx.description,
+          formattedDate: tx.date?.toDate
+            ? tx.date.toDate().toLocaleString()
+            : tx.date instanceof Timestamp
+              ? tx.date.toDate().toLocaleString()
+              : new Date(tx.date).toLocaleString(),
+        }));
 
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
         // Filtrar ingresos y gastos del mes actual
-        const currentMonthIncomes = userData.transactions.filter(
+        const currentMonthIncomes = transactions.filter(
           (tx) =>
             tx.type === "income" &&
-            tx.date.toDate().getMonth() === currentMonth &&
-            tx.date.toDate().getFullYear() === currentYear,
+            (tx.date?.toDate
+              ? tx.date.toDate().getMonth() === currentMonth &&
+                tx.date.toDate().getFullYear() === currentYear
+              : tx.date instanceof Timestamp
+                ? tx.date.toDate().getMonth() === currentMonth &&
+                  tx.date.toDate().getFullYear() === currentYear
+                : new Date(tx.date).getMonth() === currentMonth &&
+                  new Date(tx.date).getFullYear() === currentYear),
         );
-        const currentMonthExpenses = userData.transactions.filter(
+        const currentMonthExpenses = transactions.filter(
           (tx) =>
             tx.type === "expense" &&
-            tx.date.toDate().getMonth() === currentMonth &&
-            tx.date.toDate().getFullYear() === currentYear,
+            (tx.date?.toDate
+              ? tx.date.toDate().getMonth() === currentMonth &&
+                tx.date.toDate().getFullYear() === currentYear
+              : tx.date instanceof Timestamp
+                ? tx.date.toDate().getMonth() === currentMonth &&
+                  tx.date.toDate().getFullYear() === currentYear
+                : new Date(tx.date).getMonth() === currentMonth &&
+                  new Date(tx.date).getFullYear() === currentYear),
         );
 
         // Calcular diferencia: salario + ingresos - gastos
@@ -78,7 +107,7 @@
           0,
         );
 
-        diferencia = userData.salary + totalIncomes - totalExpenses;
+        diferencia = selectedAccount.salary + totalIncomes - totalExpenses;
       } else {
         userData = null;
       }
@@ -113,21 +142,27 @@
         date: Timestamp.now(),
       };
 
-      // Agregar la nueva transacción al usuario
-      userData.transactions.push(newTransaction);
-      userData.transactions.sort((a, b) => b.date.seconds - a.date.seconds);
+      const selectedAccount = getSelectedAccount();
+      console.log("Selected Account:", selectedAccount);
+      if (!selectedAccount) return;
+      if (!selectedAccount.transactions) {
+        selectedAccount.transactions = [];
+      }
+      selectedAccount.balance +=
+        newType === "income" ? newAmount : -newAmount;
+      
+      selectedAccount.transactions.push(newTransaction);
 
-      // Actualizar el usuario en Firestore
+      // Guardar el array actualizado en Firestore
       const docRef = doc(db, "users", $user.uid);
-      updateDoc(docRef, {
-        transactions: userData.transactions,
-      }).then(() => {
-        // Limpiar el formulario y cerrar el modal
-        newType = "";
-        newDescription = "";
-        newAmount = 0;
+      // Actualiza solo el array de cuentas
+      const updatedAccounts = userData.accounts.map((acc) =>
+        acc.id === selectedAccount.id ? selectedAccount : acc,
+      );
+
+      updateDoc(docRef, { accounts: updatedAccounts }).then(() => {
+        fetchUserData();
         transactionModal.close();
-        fetchUserData(); // Refrescar los datos del usuario
       });
     }
   }
@@ -147,7 +182,7 @@
             Salario mensual
           </h2>
           <p class="text-xl sm:text-3xl font-bold mt-2 truncate">
-            ${userData.salary.toLocaleString()}
+            {getSelectedAccount()?.salary?.toLocaleString() ?? "0"}
           </p>
         </div>
         <Wallet class="w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0" />
@@ -218,7 +253,9 @@
           Gráfica de transacciones
         </h2>
         {#if formattedTransactions.length > 0}
-          <div class="flex-1 w-full flex items-center justify-center overflow-x-auto">
+          <div
+            class="flex-1 w-full flex items-center justify-center overflow-x-auto"
+          >
             <Chart
               labels={labels.slice().reverse()}
               incomeData={formattedTransactions
@@ -238,12 +275,8 @@
     </div>
   </div>
 {:else}
-  <div
-    class="p-4 sm:p-8 flex justify-center items-center min-h-screen"
-  >
-    <h1
-      class="text-xl sm:text-2xl font-bold animate-pulse"
-    >
+  <div class="p-4 sm:p-8 flex justify-center items-center min-h-screen">
+    <h1 class="text-xl sm:text-2xl font-bold animate-pulse">
       Cargando datos del usuario...
     </h1>
   </div>

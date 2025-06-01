@@ -6,7 +6,7 @@
         signInWithEmailAndPassword,
         signInWithPopup,
     } from "@firebase/auth";
-    import { doc, getDoc } from "@firebase/firestore";
+    import { doc, getDoc, setDoc } from "@firebase/firestore";
 
     const data = {
         email: "",
@@ -26,7 +26,33 @@
             } else {
                 const result_v2 = await signInWithPopup(auth, provider);
                 const user = result_v2.user;
-                await getDoc(doc(db, "users", user.uid));
+                await setDoc(doc(db, "users", user.uid), {
+                username: user.displayName,
+                email: user.email,
+                settings: {
+                    theme: "light",
+                    notifications: false,
+                },
+                createdAt: new Date(),
+                accounts: [
+                    {
+                        id: "cuenta1",
+                        balance: 0,
+                        name: "Cuenta principal",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                    {
+                        id: "cuenta2",
+                        balance: 0,
+                        name: "Cuenta secundaria",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                ],
+                plan: "free",
+                planExpires: null,
+            });
                 goto("/dashboard");
             }
             console.log("User signed in:", user);

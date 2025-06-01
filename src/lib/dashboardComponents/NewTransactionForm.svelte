@@ -12,7 +12,7 @@
   }
 </script>
 
-<form on:submit={handleSubmit} method="dialog">
+<form on:submit={handleSubmit}>
   <button
     type="button"
     class="absolute top-3 right-3 transition-colors text-xl"

@@ -7,6 +7,7 @@
     import { doc, getDoc, updateDoc } from "firebase/firestore";
     import { reloadTrigger } from "$lib/reload";
     import { goto } from '$app/navigation';
+    import {selectedAccountId} from "$lib/accountStore";
 
     let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -15,6 +16,8 @@
     function toggleSidebar() {
         isOpen = !isOpen;
     }
+
+    selectedAccountId.subscribe(value => $selectedAccountId = value);
 
     let theme: 'light' | 'dark' = $state('light');
 
@@ -44,8 +47,9 @@
 
     $effect(() => {
         if (showProfileModal && userData) {
+            const selectedAccount = userData.accounts.find(acc => acc.id === $selectedAccountId);
             profileDisplayName = userData.username;
-            profileSalary = userData.salary;
+            profileSalary = selectedAccount ? selectedAccount.salary : 0;
         }
     });
 
@@ -84,10 +88,14 @@
 
             if (docSnap.exists()) {
                 userData = docSnap.data() as UserData;
-                if (!userData.transactions) {
-                    userData.transactions = [];
+                let selectedAccount = null;
+                if (userData && userData.accounts) {
+                    selectedAccount = userData.accounts.find(acc => acc.id === $selectedAccountId);
                 }
-                if (userData.settings.theme === 'dark') {
+                if (selectedAccount && !selectedAccount.transactions) {
+                    selectedAccount.transactions = [];
+                }
+                if (userData && userData.settings && userData.settings.theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                 } else {
                     document.documentElement.setAttribute('data-theme', 'light');
@@ -104,67 +112,83 @@
 <div class="flex h-screen">
     <!-- Sidebar -->
     <nav
-        class={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between bg-white [data-theme=dark]:bg-gray-900 border-r`}
-    >
-        <!-- Top: Dashboard -->
-        <ul class="menu p-0">
+    class={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${isOpen ? "w-64 px-4" : "w-16 px-2"} flex flex-col justify-between bg-white [data-theme=dark]:bg-gray-900 border-r`}
+>
+    <!-- Arriba: enlaces -->
+    <div>
+        <ul class="menu p-0 mb-2">
             <li>
                 <a
-                    class="flex items-center gap-2 tooltip"
-                    data-tip="Dashboard"
                     href="/dashboard"
+                    class="flex items-center gap-2"
                 >
                     <Home class="h-6 w-6" />
                     {#if isOpen}<span>Dashboard</span>{/if}
                 </a>
             </li>
             <li>
-                <a 
-                    class="flex items-center gap-2 tooltip"
-                    data-tip="Tabla de gastos"
+                <a
                     href="/dashboard/table"
-                    >
+                    class="flex items-center gap-2"
+                >
                     <Table class="h-6 w-6" />
-                    {#if isOpen}<span>Tabla de gastos</span>{/if}
+                    {#if isOpen}<span>Table</span>{/if}
                 </a>
             </li>
         </ul>
+    </div>
 
-        <!-- Bottom: Settings, Profile y Toggle -->
-        <div>
-            <ul class="menu p-0 mb-2">
+    <!-- Abajo: select, settings, profile, toggle -->
+    <div>
+        <ul class="menu p-0 mb-2">
+            {#if userData && userData.accounts && userData.accounts.length > 0}
                 <li>
-                    <button
-                        class="flex items-center gap-2 tooltip"
-                        data-tip="Settings"
-                        onclick={() => (showSettingsModal = true)}
+                    <select
+                        class="select select-bordered w-full"
+                        bind:value={$selectedAccountId}
+                        onchange={e => {
+                            const target = e.target as HTMLSelectElement | null;
+                            if (target) selectedAccountId.set(target.value);
+                        }}
                     >
-                        <Settings class="h-6 w-6" />
-                        {#if isOpen}<span>Settings</span>{/if}
-                    </button>
+                        {#each userData.accounts as account}
+                            <option value={account.id}>{account.name}</option>
+                        {/each}
+                    </select>
                 </li>
-                <li>
-                    <button
-                        class="flex items-center gap-2 tooltip"
-                        data-tip="Profile"
-                        onclick={() => (showProfileModal = true)}
-                    >
-                        <User class="h-6 w-6" />
-                        {#if isOpen}<span>Profile</span>{/if}
-                    </button>
-                </li>
-                <li>
-                    <button
-                        class="flex items-center gap-2"
-                        aria-label="Toggle sidebar"
-                        onclick={toggleSidebar}
-                    >
-                        <Menu class="h-6 w-6" />
-                    </button>
-                </li>
-            </ul>
-        </div>
-    </nav>
+            {/if}
+            <li>
+                <button
+                    class="flex items-center gap-2 tooltip"
+                    data-tip="Settings"
+                    onclick={() => (showSettingsModal = true)}
+                >
+                    <Settings class="h-6 w-6" />
+                    {#if isOpen}<span>Settings</span>{/if}
+                </button>
+            </li>
+            <li>
+                <button
+                    class="flex items-center gap-2 tooltip"
+                    data-tip="Profile"
+                    onclick={() => (showProfileModal = true)}
+                >
+                    <User class="h-6 w-6" />
+                    {#if isOpen}<span>Profile</span>{/if}
+                </button>
+            </li>
+            <li>
+                <button
+                    class="flex items-center gap-2"
+                    aria-label="Toggle sidebar"
+                    onclick={toggleSidebar}
+                >
+                    <Menu class="h-6 w-6" />
+                </button>
+            </li>
+        </ul>
+    </div>
+</nav>
 
     <!-- Main content -->
     <div class={`flex-1 transition-all duration-300 ${isOpen ? "ml-64" : "ml-16"}`}>
@@ -194,10 +218,11 @@
                                         : Number(profileSalary),
                             });
                             userData.username = profileDisplayName;
-                            userData.salary =
-                                typeof profileSalary === "number"
-                                    ? profileSalary
-                                    : Number(profileSalary);
+                            userData.accounts = userData.accounts.map(acc =>
+                                acc.id === $selectedAccountId
+                                    ? { ...acc, salary: typeof profileSalary === "number" ? profileSalary : Number(profileSalary) }
+                                    : acc
+                            );
                             showProfileModal = false;
                             reloadTrigger.update((n) => n + 1);
                         } catch (e) {

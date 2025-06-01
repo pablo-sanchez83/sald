@@ -5,7 +5,7 @@
         GoogleAuthProvider,
         signInWithPopup,
     } from "@firebase/auth";
-    import { doc, setDoc } from "@firebase/firestore";
+    import { collection, doc, setDoc } from "@firebase/firestore";
 
     const reUsername = /^(?![._])[a-zA-Z0-9._]+(?<![._])$/;
     const reEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -45,7 +45,24 @@
                     notifications: false,
                 },
                 createdAt: new Date(),
-                salary: 0,
+                accounts: [
+                    {
+                        id: "cuenta1",
+                        balance: 0,
+                        name: "Cuenta principal",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                    {
+                        id: "cuenta2",
+                        balance: 0,
+                        name: "Cuenta secundaria",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                ],
+                plan: "free",
+                planExpires: null,
             });
             console.log("User signed in:", user);
         } catch (err) {
@@ -73,6 +90,8 @@
                 data.password,
             );
             const user = result.user;
+
+            // Crear documento de usuario
             await setDoc(doc(db, "users", user.uid), {
                 username: data.username,
                 email: data.email,
@@ -81,7 +100,24 @@
                     notifications: false,
                 },
                 createdAt: new Date(),
-                salary: 0,
+                accounts: [
+                    {
+                        id: "cuenta1",
+                        balance: 0,
+                        name: "Cuenta principal",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                    {
+                        id: "cuenta2",
+                        balance: 0,
+                        name: "Cuenta secundaria",
+                        salary: 0,
+                        currency: "EUR",
+                    },
+                ],
+                plan: "free",
+                planExpires: null,
             });
         } catch (err) {
             console.error("Error signing up:", err);

@@ -5,9 +5,17 @@ export interface UserData {
     email: string;
     username: string;
     settings: Settings;
-    transactions: Transaction[];
+    accounts: Account[];
     createdAt: Date;
+}
+
+interface Account {
+    id: string;
+    balance: number;
+    name: string;
     salary: number;
+    currency: string;
+    transactions: Transaction[];
 }
 interface Settings {
     theme: 'light' | 'dark';
