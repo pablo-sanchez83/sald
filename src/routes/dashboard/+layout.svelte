@@ -131,19 +131,21 @@
             <li>
                 <a
                     href="/dashboard"
-                    class="flex items-center gap-2"
+                    data-tip="Panel de control"
+                    class="flex items-center gap-2 tooltip"
                 >
                     <Home class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Dashboard</span>{/if}
+                    {#if isOpen}<span>Panel de control</span>{/if}
                 </a>
             </li>
             <li>
                 <a
                     href="/dashboard/table"
-                    class="flex items-center gap-2"
+                    data-tip="Tabla de transacciones"
+                    class="flex items-center gap-2 tooltip"
                 >
                     <Table class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Table</span>{/if}
+                    {#if isOpen}<span>Tabla de transacciones</span>{/if}
                 </a>
             </li>
         </ul>
@@ -160,21 +162,21 @@
             <li>
                 <button
                     class="flex items-center gap-2 tooltip"
-                    data-tip="Settings"
+                    data-tip="Ajustes"
                     onclick={() => (showSettingsModal = true)}
                 >
                     <Settings class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Settings</span>{/if}
+                    {#if isOpen}<span>Ajustes</span>{/if}
                 </button>
             </li>
             <li>
                 <button
                     class="flex items-center gap-2 tooltip"
-                    data-tip="Profile"
+                    data-tip="Perfil"
                     onclick={() => (showProfileModal = true)}
                 >
                     <User class="h-6 w-6 fill-current text-base-content" />
-                    {#if isOpen}<span>Profile</span>{/if}
+                    {#if isOpen}<span>Perfil</span>{/if}
                 </button>
             </li>
             <li>
