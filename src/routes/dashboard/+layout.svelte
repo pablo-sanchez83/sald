@@ -27,6 +27,8 @@
     let showSettingsModal = $state(false);
     let profileDisplayName = $state("");
     let profileSalary: number = $state(0);
+    let hasInitialized = $state(false); // Para saber si ya se inicializó el modal
+    let originalSalary: number = $state(0); // Almacenar el salario original
 
     // --- LOADING Y REDIRECCIÓN ---
     let loading = $state(true);
@@ -46,15 +48,18 @@
         }
     });
 
-    $effect(() => {
-        if (userData && !userData.accounts.find(acc => acc.id === $selectedAccountId)) {
-            // Si no hay cuenta seleccionada o no existe, seleccionar la cuenta principal
-            selectedAccountId.set("cuenta1");
-        }
-        if (showProfileModal && userData) {
+    function initializeProfileModal() {
+        if (!hasInitialized && userData) {
             const selectedAccount = userData.accounts.find(acc => acc.id === $selectedAccountId);
             profileDisplayName = userData.username;
-            profileSalary = selectedAccount ? selectedAccount.salary : 0;
+            profileSalary = selectedAccount?.salary || 0;
+            hasInitialized = true;
+        }
+    }
+
+    $effect(() => {
+        if (showProfileModal && userData) {
+            initializeProfileModal();
         }
     });
 
@@ -241,16 +246,14 @@
                     <select
                         class="select select-bordered w-full"
                         bind:value={$selectedAccountId}
-                        onchange={e => {
+                        onchange={async (e) => {
                             const target = e.target as HTMLSelectElement | null;
-                            if (target) selectedAccountId.set(target.value);
-                            // Actualizar el salario mostrado al cambiar de cuenta
-                            if (userData) {
-                                const selectedAccount = userData.accounts.find(acc => acc.id === target?.value);
-                                profileSalary = selectedAccount?.salary || 0;
-                                reloadTrigger.update((n) => n + 1);
-                            } else {
-                                profileSalary = 0;
+                            if (target && userData) {
+                                selectedAccountId.set(target.value);
+                                const selectedAccount = userData.accounts.find(acc => acc.id === target.value);
+                                if (selectedAccount) {
+                                    profileSalary = selectedAccount.salary;
+                                }
                                 reloadTrigger.update((n) => n + 1);
                             }
                         }}
