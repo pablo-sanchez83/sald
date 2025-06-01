@@ -17,8 +17,8 @@
     }
 
     let theme: 'light' | 'dark' = $state('light');
-
-    let userData: UserData | null;
+    
+    let userData: UserData | null = $state(null);
     let showProfileModal = $state(false);
     let showSettingsModal = $state(false);
     let profileDisplayName = $state("");
