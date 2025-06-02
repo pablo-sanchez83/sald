@@ -139,13 +139,18 @@
             class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md text-center"
         >
             <h2 class="text-xl font-semibold mb-4">Ya has iniciado sesión</h2>
-            <button
-                class="mt-4 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition"
-                type="button"
-                on:click={() => auth.signOut()}
-            >
-                Cerrar sesión
-            </button>
+            <div class="flex flex-col items-center">
+                <button
+                    class="btn mt-4 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition"
+                    type="button"
+                    on:click={() => auth.signOut()}
+                >
+                    Cerrar sesión
+                </button>
+                <a href="/dashboard" class="btn mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"> 
+                    Ir al Dashboard
+                </a>
+            </div>
         </div>
     </div>
 {:else}
