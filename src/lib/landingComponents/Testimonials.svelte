@@ -5,13 +5,13 @@
       role: "Emprendedora",
       content: "Saldo cambió completamente la forma en que manejo mis finanzas. En 6 meses he ahorrado más que en los últimos 2 años.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face"
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
     },
     {
       name: "Carlos Ruiz",
       role: "Freelancer",
       content: "Como trabajador independiente, necesitaba una herramienta que me ayudara a organizar mis ingresos variables. Saldo es perfecta.",
-      rating: 5,
+      rating: 4,
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face"
     },
     {

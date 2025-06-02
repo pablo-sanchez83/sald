@@ -38,7 +38,7 @@
 
 </script>
 
-<section class="py-20 bg-white">
+<section id="caracteristicas" class="py-20 bg-white">
       <div class="container mx-auto px-4">
         <div class="text-center mb-16">
           <h2 class="text-4xl font-bold text-gray-900 mb-4">

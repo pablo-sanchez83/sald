@@ -2,7 +2,7 @@
     import { ArrowRight, Monitor, Shield, TrendingUp } from "lucide-svelte";
 
 </script>
-    <section class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen flex items-center">
+    <section id="inicio" class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen flex items-center">
       <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-green-600/5"></div>
       <div class="container mx-auto px-4 relative z-10">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
