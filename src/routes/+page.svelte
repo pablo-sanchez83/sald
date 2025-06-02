@@ -13,6 +13,6 @@
     <Hero />
     <Features />
     <Testimonials />
-    <Pricing />
+    <!--<Pricing />-->
   </main>
 </div>

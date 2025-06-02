@@ -10,7 +10,7 @@
         PiggyBank,
     } from "lucide-svelte";
     import type { UserData } from "$lib/types";
-    import { db, user } from "$lib/firebase";
+    import { db, user, auth } from "$lib/firebase";
     import { doc, getDoc, updateDoc } from "firebase/firestore";
     import { reloadTrigger } from "$lib/reload";
     import { goto } from "$app/navigation";
@@ -416,7 +416,21 @@
                         required
                     />
                 </label>
-                <div class="modal-action">
+                <div class="modal-action w-full">
+                    <button
+                        class="btn btn-error justify-start"
+                        type="button"
+                        onclick={() => {
+                            auth.signOut()
+                            document.documentElement.setAttribute(
+                                "data-theme",
+                                "light",
+                            );
+                            goto("/");
+                        }}
+                    >
+                        Cerrar sesión
+                    </button>
                     <button
                         type="button"
                         class="btn"
